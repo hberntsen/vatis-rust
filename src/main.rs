@@ -138,13 +138,14 @@ fn get_mac() -> String {
     debug!("available interfaces: {:?}", ifaces);
 
     // filter lo from list
-    ifaces.retain(|x| x != "lo");
+    ifaces.retain(|x| x != "lo" && x != "tun0");
 
     // read /sys/class/net/<iface>/address
     let iface = net.join(ifaces[0].as_str()).join("address");
     let mut f = fs::File::open(iface).expect("error reading address");
     let mut macaddr = String::new();
     f.read_to_string(&mut macaddr).expect("error reading address");
+    macaddr = macaddr.trim().to_string();
     info!("MAC address: {}", macaddr);
 
     macaddr

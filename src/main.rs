@@ -14,7 +14,7 @@ use linux_stats;
 use tokio::time::{self, Duration};
 use tokio::signal::unix::{signal, SignalKind};
 use mqtt::Client;
-use futures::executor::block_on;
+use futures::join;
 
 
 #[cfg(target_os="linux")]
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         tokio::select! {
             _ = timer.tick() => {
-                send_stats(&cli, &mac_address);
+                send_stats(&cli, &mac_address).await;
             },
             _ = sigint_stream.recv() => {
                 debug!("SIGINT received");
@@ -80,7 +80,7 @@ fn main() {
 
 
 // Send the statistics to the appropriate MQTT topic
-fn send_stats(cli: &mqtt::Client, mac: &String) {
+async fn send_stats(cli: &mqtt::Client, mac: &String) {
 
     // Asynchronously send memory statistics
     let mem_future = send_mem_stats(cli, mac);
@@ -88,8 +88,7 @@ fn send_stats(cli: &mqtt::Client, mac: &String) {
 
 
     // Wait until everything is sent..
-    block_on(mem_future);
-    block_on(tcp_future);
+    join!(mem_future, tcp_future);
     debug!("stats published");
 }
 

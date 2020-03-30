@@ -4,6 +4,9 @@ version = "0.2.0"
 authors = ["Bastiaan Schaap <bastiaan.schaap@nedap.com>"]
 edition = "2018"
 
+[profile.release]
+lto = true
+
 [dependencies]
 log = "^0.4"
 env_logger = "^0.7"

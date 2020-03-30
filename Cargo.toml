@@ -1,8 +1,13 @@
 [package]
-name = "hello_world"
-version = "0.1.0"
-authors = ["Your Name <you@example.com>"]
+name = "vatis"
+version = "0.2.0"
+authors = ["Bastiaan Schaap <bastiaan.schaap@nedap.com>"]
 edition = "2018"
 
 [dependencies]
-linux-stats = "0.3.1"
+log = "^0.4"
+env_logger = "^0.7"
+linux-stats = "^0.3"
+paho-mqtt = "^0.6"
+tokio = { version = "^0.2", features = ["full"] }
+futures = "^0.3"

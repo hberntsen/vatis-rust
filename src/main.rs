@@ -10,7 +10,6 @@ use std::io::Read;
 use std::path::Path;
 use std::time::SystemTime;
 use env_logger::Env;
-use linux_stats;
 use tokio::time::{self, Duration};
 use tokio::signal::unix::{signal, SignalKind};
 use mqtt::Client;
@@ -80,7 +79,7 @@ fn main() {
 
 
 // Send the statistics to the appropriate MQTT topic
-async fn send_stats(cli: &mqtt::Client, mac: &String) {
+async fn send_stats(cli: &mqtt::Client, mac: &str) {
 
     // Asynchronously send memory statistics
     let mem_future = send_mem_stats(cli, mac);
@@ -153,7 +152,7 @@ fn get_mac() -> String {
 
 
 // Sends a metric value to mqtt
-fn send(cli: &mqtt::Client, mac: &String, metric: String, ts: u128, mvalue: String) {
+fn send(cli: &mqtt::Client, mac: &str, metric: &str, ts: u128, mvalue: String) {
     let msg = mqtt::MessageBuilder::new()
         .topic(format!("metrics/{}/{}", mac, metric))
         .payload(format!("{};{}", ts, mvalue))
@@ -167,7 +166,7 @@ fn send(cli: &mqtt::Client, mac: &String, metric: String, ts: u128, mvalue: Stri
 
 
 // Takes all memory statistics, and sends them to mqtt
-async fn send_mem_stats(cli: &mqtt::Client, mac: &String) {
+async fn send_mem_stats(cli: &mqtt::Client, mac: &str) {
     // Get system time in Unix Nano
     let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
 
@@ -175,60 +174,60 @@ async fn send_mem_stats(cli: &mqtt::Client, mac: &String) {
     let mem_info = linux_stats::meminfo().unwrap();
     // let tcp_stat = linux_stats::tcp().unwrap();
 
-    send(cli, mac, String::from("memory/total"), now, format!("{}", mem_info.mem_total));
-    send(cli, mac, String::from("memory/free"), now, format!("{}", mem_info.mem_free));
-    send(cli, mac, String::from("memory/available"), now, format!("{}", mem_info.mem_available));
-    send(cli, mac, String::from("memory/buffers"), now, format!("{}", mem_info.bufers));
-    send(cli, mac, String::from("memory/cached"), now, format!("{}", mem_info.cached));
-    send(cli, mac, String::from("memory/swap/cached"), now, format!("{}", mem_info.swap_cached));
-    send(cli, mac, String::from("memory/active"), now, format!("{}", mem_info.active));
-    send(cli, mac, String::from("memory/active/anon"), now, format!("{}", mem_info.active_anon));
-    send(cli, mac, String::from("memory/active/file"), now, format!("{}", mem_info.active_file));
-    send(cli, mac, String::from("memory/inactive"), now, format!("{}", mem_info.inactive));
-    send(cli, mac, String::from("memory/inactive/anon"), now, format!("{}", mem_info.inactive_anon));
-    send(cli, mac, String::from("memory/inactive/file"), now, format!("{}", mem_info.inactive_file));
-    send(cli, mac, String::from("memory/mlocked"), now, format!("{}", mem_info.mlocked));
-    send(cli, mac, String::from("memory/unevictable"), now, format!("{}", mem_info.unevictable));
-    send(cli, mac, String::from("memory/swap/total"), now, format!("{}", mem_info.swap_total));
-    send(cli, mac, String::from("memory/swap/free"), now, format!("{}", mem_info.swap_free));
-    send(cli, mac, String::from("memory/dirty"), now, format!("{}", mem_info.dirty));
-    send(cli, mac, String::from("memory/writeback"), now, format!("{}", mem_info.writeback));
-    send(cli, mac, String::from("memory/anon-pages"), now, format!("{}", mem_info.anon_pages));
-    send(cli, mac, String::from("memory/mapped"), now, format!("{}", mem_info.mapped));
-    send(cli, mac, String::from("memory/shmem"), now, format!("{}", mem_info.shmem));
-    send(cli, mac, String::from("memory/sreclaimable"), now, format!("{}", mem_info.s_reclaimable));
-    send(cli, mac, String::from("memory/sunreclaim"), now, format!("{}", mem_info.s_unreclaim));
-    send(cli, mac, String::from("memory/slab"), now, format!("{}", mem_info.slab));
-    send(cli, mac, String::from("memory/kernelstack"), now, format!("{}", mem_info.kernel_stack));
-    send(cli, mac, String::from("memory/pagetables"), now, format!("{}", mem_info.page_tables));
-    send(cli, mac, String::from("memory/nfs-unstable"), now, format!("{}", mem_info.nfs_unstable));
-    send(cli, mac, String::from("memory/bounce"), now, format!("{}", mem_info.bounce));
-    send(cli, mac, String::from("memory/writebacktmp"), now, format!("{}", mem_info.writeback_tmp));
-    send(cli, mac, String::from("memory/commitlimit"), now, format!("{}", mem_info.commit_limit));
-    send(cli, mac, String::from("memory/committed-as"), now, format!("{}", mem_info.committed_as));
-    send(cli, mac, String::from("memory/vmalloc/total"), now, format!("{}", mem_info.vmalloc_total));
-    send(cli, mac, String::from("memory/vmalloc/used"), now, format!("{}", mem_info.vmalloc_used));
-    send(cli, mac, String::from("memory/vmalloc/chunk"), now, format!("{}", mem_info.vmalloc_chunk));
-    send(cli, mac, String::from("memory/hardware-corrupted"), now, format!("{}", mem_info.hardware_corrupted));
-    send(cli, mac, String::from("memory/hugepages/anon"), now, format!("{}", mem_info.anon_huge_pages));
-    send(cli, mac, String::from("memory/hugepages/total"), now, format!("{}", mem_info.huge_pages_total));
-    send(cli, mac, String::from("memory/hugepages/free"), now, format!("{}", mem_info.huge_pages_free));
-    send(cli, mac, String::from("memory/hugepages/surp"), now, format!("{}", mem_info.huge_pages_surp));
-    send(cli, mac, String::from("memory/hugepages/rsvd"), now, format!("{}", mem_info.huge_pages_rsvd));
-    send(cli, mac, String::from("memory/hugepagesize"), now, format!("{}", mem_info.hugepagesize));
-    send(cli, mac, String::from("memory/cma/total"), now, format!("{}", mem_info.cma_total));
-    send(cli, mac, String::from("memory/cma/free"), now, format!("{}", mem_info.cma_free));
+    send(cli, mac, "memory/total", now, format!("{}", mem_info.mem_total));
+    send(cli, mac, "memory/free", now, format!("{}", mem_info.mem_free));
+    send(cli, mac, "memory/available", now, format!("{}", mem_info.mem_available));
+    send(cli, mac, "memory/buffers", now, format!("{}", mem_info.bufers));
+    send(cli, mac, "memory/cached", now, format!("{}", mem_info.cached));
+    send(cli, mac, "memory/swap/cached", now, format!("{}", mem_info.swap_cached));
+    send(cli, mac, "memory/active", now, format!("{}", mem_info.active));
+    send(cli, mac, "memory/active/anon", now, format!("{}", mem_info.active_anon));
+    send(cli, mac, "memory/active/file", now, format!("{}", mem_info.active_file));
+    send(cli, mac, "memory/inactive", now, format!("{}", mem_info.inactive));
+    send(cli, mac, "memory/inactive/anon", now, format!("{}", mem_info.inactive_anon));
+    send(cli, mac, "memory/inactive/file", now, format!("{}", mem_info.inactive_file));
+    send(cli, mac, "memory/mlocked", now, format!("{}", mem_info.mlocked));
+    send(cli, mac, "memory/unevictable", now, format!("{}", mem_info.unevictable));
+    send(cli, mac, "memory/swap/total", now, format!("{}", mem_info.swap_total));
+    send(cli, mac, "memory/swap/free", now, format!("{}", mem_info.swap_free));
+    send(cli, mac, "memory/dirty", now, format!("{}", mem_info.dirty));
+    send(cli, mac, "memory/writeback", now, format!("{}", mem_info.writeback));
+    send(cli, mac, "memory/anon-pages", now, format!("{}", mem_info.anon_pages));
+    send(cli, mac, "memory/mapped", now, format!("{}", mem_info.mapped));
+    send(cli, mac, "memory/shmem", now, format!("{}", mem_info.shmem));
+    send(cli, mac, "memory/sreclaimable", now, format!("{}", mem_info.s_reclaimable));
+    send(cli, mac, "memory/sunreclaim", now, format!("{}", mem_info.s_unreclaim));
+    send(cli, mac, "memory/slab", now, format!("{}", mem_info.slab));
+    send(cli, mac, "memory/kernelstack", now, format!("{}", mem_info.kernel_stack));
+    send(cli, mac, "memory/pagetables", now, format!("{}", mem_info.page_tables));
+    send(cli, mac, "memory/nfs-unstable", now, format!("{}", mem_info.nfs_unstable));
+    send(cli, mac, "memory/bounce", now, format!("{}", mem_info.bounce));
+    send(cli, mac, "memory/writebacktmp", now, format!("{}", mem_info.writeback_tmp));
+    send(cli, mac, "memory/commitlimit", now, format!("{}", mem_info.commit_limit));
+    send(cli, mac, "memory/committed-as", now, format!("{}", mem_info.committed_as));
+    send(cli, mac, "memory/vmalloc/total", now, format!("{}", mem_info.vmalloc_total));
+    send(cli, mac, "memory/vmalloc/used", now, format!("{}", mem_info.vmalloc_used));
+    send(cli, mac, "memory/vmalloc/chunk", now, format!("{}", mem_info.vmalloc_chunk));
+    send(cli, mac, "memory/hardware-corrupted", now, format!("{}", mem_info.hardware_corrupted));
+    send(cli, mac, "memory/hugepages/anon", now, format!("{}", mem_info.anon_huge_pages));
+    send(cli, mac, "memory/hugepages/total", now, format!("{}", mem_info.huge_pages_total));
+    send(cli, mac, "memory/hugepages/free", now, format!("{}", mem_info.huge_pages_free));
+    send(cli, mac, "memory/hugepages/surp", now, format!("{}", mem_info.huge_pages_surp));
+    send(cli, mac, "memory/hugepages/rsvd", now, format!("{}", mem_info.huge_pages_rsvd));
+    send(cli, mac, "memory/hugepagesize", now, format!("{}", mem_info.hugepagesize));
+    send(cli, mac, "memory/cma/total", now, format!("{}", mem_info.cma_total));
+    send(cli, mac, "memory/cma/free", now, format!("{}", mem_info.cma_free));
 }
 
 // Takes all memory statistics, and sends them to mqtt
-async fn send_tcp_stats(cli: &mqtt::Client, mac: &String) {
+async fn send_tcp_stats(cli: &mqtt::Client, mac: &str) {
     // Get system time in Unix Nano
     let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos();
 
     let tcp_stat = linux_stats::tcp().unwrap();
 
     for s in &tcp_stat {
-        send(cli, mac, format!("tcp/{}/ipv4address", s.sl), now, s.local_address.to_string());
+        send(cli, mac, &format!("tcp/{}/ipv4address", s.sl), now, s.local_address.to_string());
 
     };
 }
